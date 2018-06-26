@@ -1,85 +1,64 @@
-﻿@*@{
-        Layout = "";
-    }
-    <H2>Register your channel for Task Notification</H2>
-    <p>
-        Click the button to call the "register" endpoint in the sample app, which will register the connector for the selected channel.
-    </p>
-    <a href="https://outlook.office.com/connectors/Connect?state=State_Info_To_Preserve&app_id=@(TeamsToDoAppConnector.Utils.AppSettings.ConnectorAppId)&callback_url=@(TeamsToDoAppConnector.Utils.AppSettings.BaseUrl)/connector/register">
-        <img src="https://o365connectors.blob.core.windows.net/images/ConnectToO365Button.png" alt="Register The Channel" />
-    </a>*@
+﻿@{
 
-
-
-
-
-
-
-@{
-    ViewBag.Title = "About";
+    Layout = "";
 }
-<h2></h2>
-<h3></h3>
-
-<p>Select one of the following configuration options</p>
-
+<h2>Please select options for which you need notifications</h2>
 <div class="col-md-8">
     <section id="loginForm">
         <form id="configForm">
-            <input type="radio" name="maptype" value="bing" onclick="onClick()"> Bing Maps
+            <input type="radio" name="notificationType" value="Create" onclick="onClick()"> Create Task
             <br>
-            <input type="radio" name="maptype" value="google" onclick="onClick()"> Google Maps
+            <br>
+            <input type="radio" name="notificationType" value="Update" onclick="onClick()"> Update Task
         </form>
     </section>
 </div>
 
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
+<script src="~/Scripts/teamslib.js"></script>
+<script src="~/Scripts/jquery-1.10.2.js"></script>
 
-    <script type="text/javascript">
+<script type="text/javascript">
+
         function onClick() {
             microsoftTeams.settings.setValidityState(true);
         }
+
         microsoftTeams.initialize();
         microsoftTeams.settings.registerOnSaveHandler(function (saveEvent) {
-            var radios = document.getElementsByName('maptype');
-            var url = saveEvent.result["webhookUrl"];
-            alert('Save Event - ' + JSON.stringify(saveEvent));
-            
-            /* 3rd party will save this configuration here using the user selected options and data sent by us:
-                saveEvent.result["webhookUrl"]
-            */
+            var radios = document.getElementsByName('notificationType');
 
+            var eventType = '';
             if (radios[0].checked) {
-                microsoftTeams.settings.setSettings({
-                    entityId: "bing",
-                    contentUrl: "https://83168059.ngrok.io/Connector/Setup",
-                    configName: "Bing Map"
-                });
+                eventType = radios[0].value;
             } else {
-                microsoftTeams.settings.setSettings({
-                    entityId: "google",
-                    contentUrl: "https://83168059.ngrok.io/Connector/Setup",
-                    configName: "Google Map"
-                });
+                eventType = radios[1].value;
             }
 
-            //microsoftTeams.settings.getSettings(function (settings) {
-            //});
+            microsoftTeams.settings.setSettings({
+                 entityId: eventType,
+                    contentUrl: "@(TeamsToDoAppConnector.Utils.AppSettings.BaseUrl)/Connector/Setup",
+                 configName: eventType
+                });
 
+            microsoftTeams.settings.getSettings(function (settings) {
 
-            /*
-            They can also call office365Connectors.settings.getSettings(function(settings) { ...  }) anytime to get all of the below data (whatever is availabled based on whent the call is made):
-            //TODO: Change names to camelCase
-            1. EntityId
-            2. FriendlyName
-            3. ConfigurationContentUrl (#bug - will be changed to contentUrl)
-            4. WebhookUrl
-            5. EmailAddress
-            6. ChannelId
-            7. AppType
-            8. UserObjectId
-            */
+                // Register the webhook in the backend code
+                $.ajax({
+                    url: '/Connector/Register',
+                    type: 'post',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        webhookUrl: settings.webhookUrl,
+                        eventType: eventType
+                    }),
+                    success: function (data, textStatus, jQxhr) {
+                        console.log('webhook created successfully.');
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        console.log('error', errorThrown);
+                    }
+                });
+            });
 
             saveEvent.notifySuccess();
         });
@@ -88,5 +67,4 @@
             var removeCalled = true;
         });
 
-    </script>
-}
+</script>

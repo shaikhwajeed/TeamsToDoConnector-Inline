@@ -28,7 +28,7 @@ namespace TeamsToDoAppConnector.Utils
             await PostCardAsync(webhook, cardJson);
         }
 
-        public static async Task PostWelcomeMessage(string webhook, string channelName)
+        public static async Task PostWelcomeMessage(string webhook)
         {
             string cardJson = @"{
             ""@type"": ""MessageCard"",
@@ -60,7 +60,7 @@ namespace TeamsToDoAppConnector.Utils
                     'summary': 'A task is added.',
                     'sections': [
                         {
-                            'activityTitle': 'New Task Craeted!',
+                            'activityTitle': 'New Task Created!',
                             'facts': [
                                 {
                                     'name': 'Title:',
